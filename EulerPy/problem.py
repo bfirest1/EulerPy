@@ -98,6 +98,21 @@ class Problem(object):
                        'request to EulerPy on GitHub.')
             sys.exit(1)
 
+
+
+    @property
+    def title(self):
+        """Returns the title of a given problem"""
+
+        num = self.num
+
+        titles_file = os.path.join(EULER_DATA, 'problem-titles.txt')
+        titles_line = linecache.getline(titles_file, num)
+
+        answer = re.sub(r'^{}. '.format(num), '', titles_line)
+        return answer.strip()
+
+
     @property
     def text(self):
         """Parses problems.txt and returns problem text"""

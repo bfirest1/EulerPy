@@ -24,6 +24,30 @@ def cheat(num):
 # --generate / -g
 def generate(num, prompt_default=True):
     """Generates Python file for a problem."""
+
+    def wrap(text, wrap_len):
+        """Wraps text at given character width.
+        Args:
+            text (str): text to wrap
+            wrap_len (int): character width at which to wrap
+        Returns:
+            String with newlines inserted as appropriate
+        """
+        if len(text) > wrap_len:
+            words = iter(text.split())
+            wrapped_lines = []
+            wrapped_line = next(words) # assume 1st word is shorter than wrap_len
+            for word in words:
+                if len(wrapped_line) + len(word) < wrap_len: # < rather than <= to account for 1 char space
+                    wrapped_line = ' '.join([wrapped_line, word])
+                else:
+                    wrapped_lines.append(wrapped_line)
+                    wrapped_line = word
+            wrapped_lines.append(wrapped_line)
+            return '\n'.join(wrapped_lines)
+        else:
+            return text
+
     p = Problem(num)
 
     problem_text = p.text
@@ -42,13 +66,27 @@ def generate(num, prompt_default=True):
         prefix = previous_file.prefix if previous_file else ''
         filename = p.filename(prefix=prefix)
 
-    header = 'Project Euler Problem %i' % num
-    divider = '=' * len(header)
+    header = 'Project Euler Problem {}\n\n{}'.format(num, wrap(p.title, 76))
+    divider = '=' * len(header.split('\n')[-1])
     text = '\n'.join([header, divider, '', problem_text])
-    content = '\n'.join(['"""', text, '"""'])
+    content = '\n'.join([
+        '#!/usr/bin/env python',
+        '# -*- coding: utf-8 -*-',
+        '',
+        '"""',
+        text,
+        '"""',
+        '',
+        'def problem_{}():'.format(num),
+        '    response = 0',
+        '    print(response)',
+        '',
+        "if __name__ == '__main__':",
+        '    problem_{}()'.format(num)
+    ])
 
     with open(filename, 'w') as f:
-        f.write(content + '\n\n\n')
+        f.write(content)
 
     click.secho('Successfully created "{}".'.format(filename), fg='green')
 
